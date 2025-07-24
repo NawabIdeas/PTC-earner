@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarnApp - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div class="flex items-center justify-between p-4">
+            <button id="menuBtn" class="text-2xl hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-all">
+                ☰
+            </button>
+            <h1 class="text-xl font-bold">EarnApp</h1>
+            <button id="profileBtn" class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-all">
+                👤
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="p-4 pb-20">
+        <!-- Dashboard -->
+        <div id="dashboard" class="space-y-6">
+            <!-- Balance Card -->
+            <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-2xl p-6 shadow-lg">
+                <div class="text-center">
+                    <p class="text-lg opacity-90 mb-2">Current Balance</p>
+                    <p id="currentBalance" class="text-4xl font-bold mb-4">$0.000</p>
+                    <button id="withdrawBtn" 
+                            class="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-opacity-90 transform hover:scale-105 transition-all">
+                        Withdraw
+                    </button>
+                </div>
+            </div>
+
+            <!-- Daily Check-in Card -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">Daily Check-in</h3>
+                    <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-lg">
+                        <div class="text-white font-bold text-sm">
+                            <div class="text-xs leading-none">17</div>
+                            <div class="text-xs leading-none mt-0.5">JAN</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">Claim your daily reward!</p>
+                <button id="checkinBtn" 
+                        class="w-full bg-gradient-to-r from-orange-400 to-pink-500 text-white py-3 rounded-lg font-semibold hover:from-orange-500 hover:to-pink-600 transform hover:scale-105 transition-all">
+                    Claim Daily Reward
+                </button>
+                <div id="checkinStatus" class="mt-3 text-sm text-center"></div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="showPage('earn')" 
+                        class="bg-white rounded-xl p-6 shadow-lg text-center hover:shadow-xl transform hover:scale-105 transition-all">
+                    <div class="text-3xl mb-2">
+                        <div class="w-12 h-12 mx-auto bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                            <div class="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
+                        </div>
+                    </div>
+                    <p class="font-semibold text-gray-800">Watch Ads</p>
+                    <p class="text-sm text-gray-600">Earn money</p>
+                </button>
+                
+                <button onclick="showPage('referral')" 
+                        class="bg-white rounded-xl p-6 shadow-lg text-center hover:shadow-xl transform hover:scale-105 transition-all">
+                    <div class="text-3xl mb-2">🔗</div>
+                    <p class="font-semibold text-gray-800">Referral</p>
+                    <p class="text-sm text-gray-600">Invite friends</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Earn Page -->
+        <div id="earnPage" class="hidden space-y-4">
+            <div class="flex items-center mb-6">
+                <button onclick="showPage('dashboard')" class="mr-4 text-2xl text-blue-600">←</button>
+                <h2 class="text-2xl font-bold text-gray-800">Watch Ads & Earn</h2>
+            </div>
+            <div id="adsList" class="space-y-4">
+                <!-- Ads will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Withdraw Page -->
+        <div id="withdrawPage" class="hidden space-y-4">
+            <div class="flex items-center mb-6">
+                <button onclick="showPage('dashboard')" class="mr-4 text-2xl text-blue-600">←</button>
+                <h2 class="text-2xl font-bold text-gray-800">Withdraw Funds</h2>
+            </div>
+            
+            <!-- Method Selection -->
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <h3 class="text-lg font-semibold mb-4">Select Withdrawal Method</h3>
+                <div class="space-y-2">
+                    <button onclick="selectWithdrawMethod('local')" 
+                            class="w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all">
+                        <div class="font-semibold">Local Accounts</div>
+                        <div class="text-sm text-gray-600">JazzCash, EasyPaisa, NayaPay, SadaPay</div>
+                    </button>
+                    <button onclick="selectWithdrawMethod('crypto')" 
+                            class="w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 transition-all">
+                        <div class="font-semibold">Crypto Wallets</div>
+                        <div class="text-sm text-gray-600">USDT TRC20, Bitcoin, Litecoin, Solana</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Withdraw Form -->
+            <div id="withdrawForm" class="bg-white rounded-xl p-6 shadow-lg hidden">
+                <form id="withdrawFormElement">
+                    <div class="space-y-4">
+                        <div id="methodSelect"></div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Account Name/Wallet Name</label>
+                            <input type="text" id="accountName" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Account Number/Wallet Address</label>
+                            <input type="text" id="accountNumber" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Amount (Min $5.00)</label>
+                            <input type="number" id="withdrawAmount" min="5" step="0.01" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button type="submit" 
+                                class="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-blue-700 transition-all">
+                            Submit Withdrawal Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Status Page -->
+        <div id="statusPage" class="hidden space-y-4">
+            <div class="flex items-center mb-6">
+                <button onclick="showPage('dashboard')" class="mr-4 text-2xl text-blue-600">←</button>
+                <h2 class="text-2xl font-bold text-gray-800">Withdrawal Status</h2>
+            </div>
+            <div id="withdrawalsList" class="space-y-4">
+                <!-- Withdrawal requests will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Referral Page -->
+        <div id="referralPage" class="hidden space-y-4">
+            <div class="flex items-center mb-6">
+                <button onclick="showPage('dashboard')" class="mr-4 text-2xl text-blue-600">←</button>
+                <h2 class="text-2xl font-bold text-gray-800">Referral Program</h2>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div class="text-center mb-6">
+                    <div class="text-4xl mb-4">🔗</div>
+                    <h3 class="text-xl font-bold mb-2">Invite Friends & Earn</h3>
+                    <p class="text-gray-600">Get rewarded for every friend you bring!</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Your Referral Link</label>
+                        <div class="flex">
+                            <input type="text" id="referralLink" readonly 
+                                   class="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg bg-gray-50">
+                            <button onclick="copyReferralLink()" 
+                                    class="px-6 py-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 font-semibold">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="text-2xl font-bold text-blue-600" id="referralCount">0</div>
+                            <div class="text-sm text-gray-600">Total Referrals</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="text-2xl font-bold text-green-600" id="referralEarnings">$0.00</div>
+                            <div class="text-sm text-gray-600">Earnings</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Page -->
+        <div id="contactPage" class="hidden space-y-4">
+            <div class="flex items-center mb-6">
+                <button onclick="showPage('dashboard')" class="mr-4 text-2xl text-blue-600">←</button>
+                <h2 class="text-2xl font-bold text-gray-800">Contact Admin</h2>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 shadow-lg">
+                <div id="chatMessages" class="h-64 overflow-y-auto border border-gray-200 rounded-lg p-4 mb-4 space-y-2">
+                    <!-- Chat messages will appear here -->
+                </div>
+                
+                <form id="chatForm" class="flex space-x-2">
+                    <input type="text" id="messageInput" placeholder="Type your message..." 
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold">
+                        Send
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 max-h-96 overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Profile Settings</h3>
+                    <button onclick="closeProfile()" class="text-2xl text-gray-500 hover:text-gray-700">×</button>
+                </div>
+                
+                <form id="profileForm" class="space-y-4">
+                    <div class="text-center mb-4">
+                        <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-2 flex items-center justify-center">
+                            <span class="text-2xl">👤</span>
+                        </div>
+                        <input type="file" id="profilePicture" accept="image/*" class="hidden">
+                        <button type="button" onclick="document.getElementById('profilePicture').click()" 
+                                class="text-blue-500 hover:text-blue-700 text-sm">
+                            Change Picture
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                        <input type="text" id="profileName" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="profileEmail" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">New Password (leave blank to keep current)</label>
+                        <input type="password" id="profilePassword" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <button type="submit" 
+                            class="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Side Menu -->
+    <div id="sideMenu" class="fixed inset-y-0 left-0 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 z-40 w-64">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-xl font-bold text-gray-800">Menu</h2>
+                <button id="closeMenuBtn" class="text-2xl text-gray-500 hover:text-gray-700">×</button>
+            </div>
+            
+            <nav class="space-y-2">
+                <button onclick="showPage('dashboard')" class="w-full text-left p-4 rounded-lg hover:bg-gray-100 flex items-center space-x-3">
+                    <span class="text-xl">🏠</span>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="showPage('status')" class="w-full text-left p-4 rounded-lg hover:bg-gray-100 flex items-center space-x-3">
+                    <span class="text-xl">📊</span>
+                    <span>Status</span>
+                </button>
+                <button onclick="showPage('earn')" class="w-full text-left p-4 rounded-lg hover:bg-gray-100 flex items-center space-x-3">
+                    <span class="text-xl">📺</span>
+                    <span>Earn</span>
+                </button>
+                <button onclick="showPage('referral')" class="w-full text-left p-4 rounded-lg hover:bg-gray-100 flex items-center space-x-3">
+                    <span class="text-xl">🔗</span>
+                    <span>Referral</span>
+                </button>
+                <button onclick="showPage('contact')" class="w-full text-left p-4 rounded-lg hover:bg-gray-100 flex items-center space-x-3">
+                    <span class="text-xl">💬</span>
+                    <span>Contact</span>
+                </button>
+                <button onclick="logout()" class="w-full text-left p-4 rounded-lg hover:bg-red-100 text-red-600 flex items-center space-x-3">
+                    <span class="text-xl">🚪</span>
+                    <span>Logout</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Menu Overlay -->
+    <div id="menuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent"></div>
+            <span class="text-gray-700">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <div id="alertIcon" class="text-center mb-4"></div>
+            <p id="alertMessage" class="text-center text-gray-700 mb-4"></p>
+            <button onclick="closeAlert()" 
+                    class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <!-- Ad Viewer Modal -->
+    <div id="adViewer" class="fixed inset-0 bg-black z-50 hidden">
+        <div class="flex flex-col h-full">
+            <div class="flex-1 relative">
+                <iframe id="adFrame" class="w-full h-full"></iframe>
+                <button id="closeAdBtn" class="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg hidden">
+                    Close (✕)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="user-app.js"></script>
+</body>
+</html>
